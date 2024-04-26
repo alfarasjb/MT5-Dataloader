@@ -14,8 +14,11 @@ class PriceData:
         self.cols=['date','open','high','low','close','spread']
 
     def info(self) -> None:
+        """ 
+        Prints data info 
+        """
         print(f"Symbol: {self.symbol}")
-        print(f"Resolution: {self.resolution}")
+        print(f"Resolution: {self.timeframe}")
         print(f"Length: {len(self.data)}")
                 
 

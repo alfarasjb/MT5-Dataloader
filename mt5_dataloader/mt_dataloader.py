@@ -54,11 +54,11 @@ class MTDataLoader:
                 rates = mt5.copy_rates_from_pos(symbol, resolution, start_index, num_bars)
             
             if request_type == self.request.date:
-                if start_date is None:
+                if end_date is None:
                     raise ValueError("No start date specified")
                 
-                start_date = self.__dates_as_datetime(start_date) if isinstance(start_date, datetime.date) else start_date
-                rates = mt5.copy_rates_from(symbol, resolution, start_date, num_bars)
+                end_date = self.__dates_as_datetime(end_date) if isinstance(end_date, datetime.date) else end_date
+                rates = mt5.copy_rates_from(symbol, resolution, end_date, num_bars)
             
             if request_type == self.request.range:
                 if start_date is None or end_date is None:
@@ -81,7 +81,7 @@ class MTDataLoader:
             print(f"No data available for: {symbol} {mt_utils.MTResolutions().timeframe(resolution=resolution)}") 
             return None 
 
-        df = self.rates_to_frame(rates) 
+        df = self.__rates_to_frame(rates) 
         
         price_data = mt_pricedata.PriceData(symbol, resolution, df)
         
@@ -92,7 +92,7 @@ class MTDataLoader:
         return datetime.datetime(year=target.year, month=target.month, day=target.day)
     
     @staticmethod 
-    def rates_to_frame(rates) -> pd.DataFrame:
+    def __rates_to_frame(rates) -> pd.DataFrame:
         """ 
         Converts raw rates into dataframe with OHLC columns.
         """
