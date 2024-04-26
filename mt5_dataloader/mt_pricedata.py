@@ -1,5 +1,5 @@
 import pandas as pd 
-import mt_utils 
+from .mt_utils import * 
 import matplotlib.pyplot as plt
 
 
@@ -8,7 +8,7 @@ class PriceData:
     def __init__(self, symbol:str, resolution:str, data:pd.DataFrame):
         self.symbol=symbol 
         self.resolution=resolution
-        self.timeframe=mt_utils.MTResolutions().timeframe(self.resolution)
+        self.timeframe=MTResolutions().timeframe(self.resolution)
         self.data=data 
 
         self.cols=['date','open','high','low','close','spread']

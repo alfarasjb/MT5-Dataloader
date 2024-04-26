@@ -1,8 +1,8 @@
 import pandas as pd
 import MetaTrader5 as mt5
 import os 
-import mt_utils 
-import mt_pricedata 
+from .mt_utils import * 
+from .mt_pricedata import * 
 import datetime
 
 
@@ -25,8 +25,8 @@ class MTDataLoader:
         
         self.cols=['date','open','high','low','close','spread']
         
-        self.resolutions = mt_utils.MTResolutions()
-        self.request = mt_utils.MTRequests()
+        self.resolutions = MTResolutions()
+        self.request = MTRequests()
             
     def launch_mt5(self) -> bool: 
         return mt5.initialize(self.path)
@@ -75,15 +75,15 @@ class MTDataLoader:
 
 
         except KeyError:
-            print(f"No data available for: {symbol} {mt_utils.MTResolutions().timeframe(resolution=resolution)}") 
+            print(f"No data available for: {symbol} {MTResolutions().timeframe(resolution=resolution)}") 
         
         if rates is None: 
-            print(f"No data available for: {symbol} {mt_utils.MTResolutions().timeframe(resolution=resolution)}") 
+            print(f"No data available for: {symbol} {MTResolutions().timeframe(resolution=resolution)}") 
             return None 
 
         df = self.__rates_to_frame(rates) 
         
-        price_data = mt_pricedata.PriceData(symbol, resolution, df)
+        price_data = PriceData(symbol, resolution, df)
         
         return price_data
  
