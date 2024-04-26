@@ -102,3 +102,4 @@ price = mt.get_price_data(symbol, resolution, request_type, start_date=start_dat
 # Plots the close price of requested data
 price.show_plot(kind='line', src='close')
 ```
+![linechart](https://github.com/alfarasjb/MT5-Dataloader/assets/72119101/7a9bf8b3-eaf0-41b3-8596-2216c348f6fe)
