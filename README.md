@@ -77,6 +77,7 @@ print(mt.get_symbols(category))
 # Symbols under the fxmajors category 
 ['EURUSD', 'GBPUSD', 'USDCHF', 'USDJPY', 'USDCAD', 'AUDUSD']
 ```
+*Note: Categories and symbol names may differ with different brokers.*
 
 
 ## **PriceData** 
