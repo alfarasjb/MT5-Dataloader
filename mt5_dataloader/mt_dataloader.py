@@ -50,7 +50,7 @@ class MTDataLoader:
         # gets list of valid requests 
         # move this
         self.valid_requests = list(MTRequests.__members__.values())
-            
+
     def launch_mt5(self) -> bool: 
         """ 
         Launches the MT5 terminal. This is needed in order to get historical data. 
@@ -161,6 +161,8 @@ class MTDataLoader:
         
         if rates is None: 
             print(f"No data available for: {symbol} {MTResolutions.timeframe(resolution=resolution)}") 
+
+          
             return None 
 
         df = self.__rates_to_frame(rates) 

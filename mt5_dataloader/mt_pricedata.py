@@ -3,7 +3,7 @@ This module contains a template to building a type of PriceData. Requests to MT5
 is converted into this object. 
 """
 
-import pandas as pd 
+import pandas as pd
 import matplotlib.pyplot as plt
 
 from .mt_utils import MTResolutions
