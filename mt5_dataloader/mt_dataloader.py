@@ -7,7 +7,7 @@ import pandas as pd
 import MetaTrader5 as mt5
 import os 
 import datetime
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from .mt_pricedata import PriceData
 from .mt_utils import MTRequests, MTResolutions, SymbolCategories
@@ -63,8 +63,8 @@ class MTDataLoader:
             symbol:str,
             resolution:str,
             request_type:str, 
-            start_date:Optional[datetime.datetime]=None,
-            end_date:Optional[datetime.datetime]=None, 
+            start_date:Optional[Union[datetime.datetime, datetime.date]]=None,
+            end_date:Optional[Union[datetime.datetime, datetime.date]]=None, 
             start_index:Optional[int]=0,
             num_bars:Optional[int]=99000, 
             export:Optional[bool]=False
