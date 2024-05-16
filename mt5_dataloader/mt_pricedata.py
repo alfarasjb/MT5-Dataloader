@@ -1,17 +1,34 @@
-import pandas as pd 
-from .mt_utils import * 
+""" 
+This module contains a template to building a type of PriceData. Requests to MT5 in getting historical data 
+is converted into this object. 
+"""
+
+import pandas as pd
 import matplotlib.pyplot as plt
 
+from .mt_utils import MTResolutions
 
 class PriceData: 
     
     def __init__(self, symbol:str, resolution:str, data:pd.DataFrame):
+        """ 
+        Parameters
+        ----------
+            symbol: str 
+                Symbol of specified data 
+            
+            resolution: str 
+                Resolution of specified data 
+
+            data: pd.DataFrame
+                OHLC data 
+        """
         self.symbol=symbol 
         self.resolution=resolution
-        self.timeframe=MTResolutions().timeframe(self.resolution)
+        self.timeframe=MTResolutions.timeframe(self.resolution)
         self.data=data 
 
-        self.cols=['date','open','high','low','close','spread']
+
 
     def info(self) -> None:
         """ 
@@ -23,6 +40,7 @@ class PriceData:
                 
 
     def show_plot(self,kind:str='line',src:str='close') -> None:
+        raise NotImplementedError
         if kind == 'line':
             self.data[src].plot(figsize=(12, 6))
             plt.xlabel('Date')

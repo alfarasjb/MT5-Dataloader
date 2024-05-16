@@ -1,27 +1,25 @@
 import MetaTrader5 as mt5
+from enum import Enum 
 
-class MTRequests: 
-    def __init__(self): 
-        self.position="pos" 
-        self.date="date"
-        self.range="range"
-        self.valid_values=['pos','date','range']
-
-
+class MTRequests(Enum):
+    POSITION="pos"
+    DATE="date"
+    RANGE="range"
     
-class MTResolutions:
-    def __init__(self):
-        self.RESOLUTION_M1=mt5.TIMEFRAME_M1 
-        self.RESOLUTION_M5=mt5.TIMEFRAME_M5 
-        self.RESOLUTION_M15=mt5.TIMEFRAME_M15 
-        self.RESOLUTION_M30=mt5.TIMEFRAME_M30 
-        self.RESOLUTION_H1=mt5.TIMEFRAME_H1 
-        self.RESOLUTION_H4=mt5.TIMEFRAME_H4 
-        self.RESOLUTION_D1=mt5.TIMEFRAME_D1 
-        self.RESOLUTION_W1=mt5.TIMEFRAME_W1 
-        self.RESOLUTION_MN1=mt5.TIMEFRAME_MN1 
-
-    def timeframe(self, resolution):
+    
+class MTResolutions(Enum): 
+    RESOLUTION_M1=mt5.TIMEFRAME_M1 
+    RESOLUTION_M5=mt5.TIMEFRAME_M5 
+    RESOLUTION_M15=mt5.TIMEFRAME_M15 
+    RESOLUTION_M30=mt5.TIMEFRAME_M30 
+    RESOLUTION_H1=mt5.TIMEFRAME_H1 
+    RESOLUTION_H4=mt5.TIMEFRAME_H4 
+    RESOLUTION_D1=mt5.TIMEFRAME_D1 
+    RESOLUTION_W1=mt5.TIMEFRAME_W1 
+    RESOLUTION_MN1=mt5.TIMEFRAME_MN1 
+    
+    @staticmethod
+    def timeframe(resolution): 
         tf_converter={
             mt5.TIMEFRAME_M1 : "m1",
             mt5.TIMEFRAME_M5 : "m5",
@@ -34,6 +32,7 @@ class MTResolutions:
             mt5.TIMEFRAME_MN1 : "mn1"
         }
         return tf_converter[resolution]
+    
     
 class SymbolCategories:
     def __init__(self):

@@ -1,16 +1,42 @@
+"""
+This module contains methods to extract historical price data from the MetaTrader5 Terminal using the Python 
+MetaTrader5 API. 
+"""
+
 import pandas as pd
 import MetaTrader5 as mt5
 import os 
-from .mt_utils import * 
-from .mt_pricedata import * 
 import datetime
+from typing import Optional, List
+
+from .mt_pricedata import PriceData
+from .mt_utils import MTRequests, MTResolutions, SymbolCategories
 
 
 class MTDataLoader: 
 
-    def __init__(self, envpath_key:str = 'MT5_PATH'): 
+    def __init__(
+            self, 
+            path:str=None, 
+            envpath_key:str='MT5_PATH'
+        ): 
+        """ 
+        Initialize instance variables 
+
+        Parameters
+        ----------
+            path:str = None 
+                Path to MT5 executable. Paths are stored in `mt_paths.py`
+
+                If no path is specified (None), default path will be taken from environment variable specified by the key: `MT5_PATH` 
+
+            envpath_key:str = MT5_PATH
+                Default key for environment variable if no path is specified for MT5 executable. 
+        """
+
         try:
-            self.path = os.environ[envpath_key]
+            # path variable is prioritized
+            self.path = os.environ[envpath_key] if path is None else path
         except:
             print("MT5 Path not found. Add MT5 path to environment variables. Default Key: MT5_PATH")
             self.path = None 
@@ -20,49 +46,105 @@ class MTDataLoader:
             except:
                 raise RuntimeError("Failed to launch MetaTrader5")
             
-            
-        # constants 
-        
-        self.cols=['date','open','high','low','close','spread']
-        
-        self.resolutions = MTResolutions()
-        self.request = MTRequests()
-            
+    
+        # gets list of valid requests 
+        # move this
+        self.valid_requests = list(MTRequests.__members__.values())
+
     def launch_mt5(self) -> bool: 
+        """ 
+        Launches the MT5 terminal. This is needed in order to get historical data. 
+        """
         return mt5.initialize(self.path)
     
         
-    def get_price_data(self,
-                           symbol:str,
-                           resolution:str,
-                           request_type:str, 
-                           start_date=None,
-                           end_date=None, 
-                           start_index:int=0,
-                           num_bars:int=99000, 
-                           export:bool=False) -> pd.DataFrame:
-
+    def get_price_data(
+            self,
+            symbol:str,
+            resolution:str,
+            request_type:str, 
+            start_date:Optional[datetime.datetime]=None,
+            end_date:Optional[datetime.datetime]=None, 
+            start_index:Optional[int]=0,
+            num_bars:Optional[int]=99000, 
+            export:Optional[bool]=False
+        ) -> pd.DataFrame:
+        # TODO improve docstring
         """
         Fetches price data from MT5 history. 
+        
 
-        Returns a DataFrame 
+        Parameters
+        ----------
+            symbol: str
+                Symbol to fetch data
+            
+            resolution: str
+                Timeframe/resolution. See MTResolutions 
+            
+            request_type: str 
+                Determines how MT5 will get historical data, either by:
+                    1. `pos` - Gets data using the number of candles. Required parameter: `num_bars` 
+                    2. `range` - Gets data using a range of dates. Required parameters: `start_date`, `end_date` 
+                    3. `date` - Gets data until a specified data. Required parameter: `end_date`
+
+            start_date: datetime
+                Start date for historical data. 
+                Used when `request_type` is either `date` or `range`
+                Ignored when `request_type` is set to `pos`
+
+            end_date: datetime
+                End date for historical data. 
+                Used when `request_type` is either `date` or `range`  
+                Ignored when `request_type` is set to `pos`
+
+            start_index: int 
+                First bar to fetch with reference to current open bar. 0 = current bar 
+                Used when `request_type` is set to `pos`
+            
+            num_bars: int 
+                Number of bars to fetch. 
+                Used when `request_type` is set to `pos`
+
+            export: bool
+                Exports data to csv. Not implemented.     
         """
+
+        if isinstance(resolution, MTResolutions):
+            resolution = resolution.value
+        
+        if isinstance(request_type, str):
+            request_type = MTRequests._value2member_map_[request_type]
+
 
         rates=None 
         try:
-            if request_type == self.request.position: 
+            if request_type == MTRequests.POSITION: 
+                # Gets historical data based on position. 
                 rates = mt5.copy_rates_from_pos(symbol, resolution, start_index, num_bars)
             
-            if request_type == self.request.date:
+            elif request_type == MTRequests.DATE:
+                # Gets historical data based on date 
                 if end_date is None:
-                    raise ValueError("No start date specified")
+                    raise ValueError("No end date specified")
+                
+                if not self.validate_date(end_date):
+                    raise TypeError("Invalid type for end_date")
+                
                 
                 end_date = self.__dates_as_datetime(end_date) if isinstance(end_date, datetime.date) else end_date
                 rates = mt5.copy_rates_from(symbol, resolution, end_date, num_bars)
             
-            if request_type == self.request.range:
+            elif request_type == MTRequests.RANGE:
+                # Gets historical data based on date range
                 if start_date is None or end_date is None:
                     raise ValueError("Incomplete dates. Query requires start date and end date.")
+                
+                if not self.validate_date(start_date):
+                    raise TypeError("Invalid type for start date")
+            
+                if not self.validate_date(end_date):
+                    raise TypeError("Invalid type for end date")
                 
                 start_date = self.__dates_as_datetime(start_date) if isinstance(start_date, datetime.date) else start_date 
                 end_date = self.__dates_as_datetime(end_date) if isinstance(end_date, datetime.date) else end_date
@@ -70,15 +152,17 @@ class MTDataLoader:
                 rates = mt5.copy_rates_range(symbol, resolution, start_date, end_date)
 
             else: 
-                if request_type not in self.request.valid_values:
-                    raise ValueError(f"Invalid Request Type. Valid Values: {self.request.valid_values}. Input: {request_type}")
+                if request_type not in self.valid_requests:
+                    raise ValueError(f"Invalid Request Type. Valid Values: {self.valid_requests}. Input: {request_type}")
 
 
         except KeyError:
-            print(f"No data available for: {symbol} {MTResolutions().timeframe(resolution=resolution)}") 
+            print(f"No data available for: {symbol} {MTResolutions.timeframe(resolution=resolution)}") 
         
         if rates is None: 
-            print(f"No data available for: {symbol} {MTResolutions().timeframe(resolution=resolution)}") 
+            print(f"No data available for: {symbol} {MTResolutions.timeframe(resolution=resolution)}") 
+
+          
             return None 
 
         df = self.__rates_to_frame(rates) 
@@ -87,12 +171,26 @@ class MTDataLoader:
         
         return price_data
  
+
+    def validate_date(self, target:datetime.datetime) -> bool:
+        """ 
+        Validates if specified date is a valid datetime type
+        """ 
+        if isinstance(target, datetime.datetime):
+            return True 
+        if isinstance(target, datetime.date):
+            return True 
+        return False
+
+
     @staticmethod
-    def __dates_as_datetime(target:datetime.datetime):
+    def __dates_as_datetime(target:datetime.date) -> datetime.datetime: 
+        """"""
         return datetime.datetime(year=target.year, month=target.month, day=target.day)
     
+
     @staticmethod 
-    def __rates_to_frame(rates) -> pd.DataFrame:
+    def __rates_to_frame(rates:any) -> pd.DataFrame:
         """ 
         Converts raw rates into dataframe with OHLC columns.
         """
@@ -101,13 +199,15 @@ class MTDataLoader:
         data = data.loc[:,['time','open','high','low','close','spread']]
         data = data.set_index('time', drop=True)
         data.index.name='date'
+
         return data 
         
 
     @staticmethod 
-    def get_symbols(category:str) -> list:
+    def get_symbols(category:str) -> List:
         """
         Gets list of symbols under a specified category
+
         """
         symbols = mt5.symbols_get()
         symbols_list = list()
@@ -123,7 +223,7 @@ class MTDataLoader:
 
     
     @staticmethod 
-    def categories() -> list:
+    def categories() -> List:
         """ 
         Gets list of categories derived from symbols path
         """
