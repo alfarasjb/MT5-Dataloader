@@ -6,11 +6,12 @@ is converted into this object.
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from .mt_utils import MTResolutions
+from mt_utils import MTResolutions
 
-class PriceData: 
+
+class PriceData:
     
-    def __init__(self, symbol:str, resolution:str, data:pd.DataFrame):
+    def __init__(self, symbol: str, resolution: str, data: pd.DataFrame):
         """ 
         Parameters
         ----------
@@ -23,12 +24,10 @@ class PriceData:
             data: pd.DataFrame
                 OHLC data 
         """
-        self.symbol=symbol 
-        self.resolution=resolution
-        self.timeframe=MTResolutions.timeframe(self.resolution)
-        self.data=data 
-
-
+        self.symbol = symbol
+        self.resolution = resolution
+        self.timeframe = MTResolutions.timeframe(self.resolution)
+        self.data = data
 
     def info(self) -> None:
         """ 
@@ -37,10 +36,9 @@ class PriceData:
         print(f"Symbol: {self.symbol}")
         print(f"Resolution: {self.timeframe}")
         print(f"Length: {len(self.data)}")
-                
 
-    def show_plot(self,kind:str='line',src:str='close') -> None:
-        raise NotImplementedError
+    def show_plot(self, kind: str = 'line', src: str = 'close') -> None:
+        """
         if kind == 'line':
             self.data[src].plot(figsize=(12, 6))
             plt.xlabel('Date')
@@ -65,4 +63,7 @@ class PriceData:
         
 
         fig.show()
+        """
+        return None
+
 
