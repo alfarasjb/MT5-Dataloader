@@ -7,7 +7,7 @@ import pandas as pd
 import MetaTrader5 as mt5
 import os 
 import datetime
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Any
 
 from .mt_pricedata import PriceData
 from .mt_utils import MTRequests, MTResolutions, SymbolCategories
@@ -49,6 +49,7 @@ class MTDataLoader:
         # gets list of valid requests 
         # move this
         self.valid_requests = list(MTRequests.__members__.values())
+        self.valid_resolutions = [resolution.value for resolution in list(MTResolutions.__members__.values())]
 
     def launch_mt5(self) -> bool: 
         """ 
@@ -59,14 +60,13 @@ class MTDataLoader:
     def get_price_data(
             self,
             symbol: str,
-            resolution: str,
-            request_type: str,
+            resolution: Union[str, MTResolutions],
+            request_type: Union[str, MTRequests],
             start_date: Optional[Union[datetime.datetime, datetime.date]] = None,
             end_date: Optional[Union[datetime.datetime, datetime.date]] = None,
             start_index: Optional[int] = 0,
             num_bars: Optional[int] = 99000,
-            export: Optional[bool] = False
-        ) -> Optional[PriceData]:
+            export: Optional[bool] = False) -> Optional[PriceData]:
         # TODO improve docstring
         """
         Fetches price data from MT5 history. 
@@ -112,7 +112,12 @@ class MTDataLoader:
             resolution = resolution.value
         
         if isinstance(request_type, str):
+            # This would raise key error
             request_type = MTRequests._value2member_map_[request_type]
+
+        # TODO: Check if resolutions is valid, and improve err message
+        if resolution not in self.valid_resolutions:
+            raise ValueError(f"Invalid Resolution: {resolution}. Value is not found in valid resolutions.")
 
         rates = None
         try:
@@ -141,6 +146,10 @@ class MTDataLoader:
             
                 if not self.validate_date(end_date):
                     raise TypeError("Invalid type for end date")
+
+                if end_date < start_date:
+                    raise ValueError(f"Invalid Dates. Start Date: {start_date} cannot be greater than End Date: \
+                        {end_date}.")
                 
                 start_date = self.__dates_as_datetime(start_date) if isinstance(start_date, datetime.date) else\
                     start_date
@@ -148,27 +157,28 @@ class MTDataLoader:
                 
                 rates = mt5.copy_rates_range(symbol, resolution, start_date, end_date)
 
-            else: 
-                if request_type not in self.valid_requests:
-                    raise ValueError(f"Invalid Request Type. Valid Values: {self.valid_requests}. \
-                        Input: {request_type}")
+            else:
+                # This is unlikely to happen since if request is invalid, a KeyError will be thrown
+                raise ValueError(f"Something went wrong. Request Type may be invalid")
 
         except KeyError:
             print(f"No data available for: {symbol} {MTResolutions.timeframe(resolution=resolution)}") 
-        
+
+            return None
+
         if rates is None: 
             print(f"No data available for: {symbol} {MTResolutions.timeframe(resolution=resolution)}") 
 
             return None 
 
-        df = self.__rates_to_frame(rates) 
+        df = self.rates_to_frame(rates)
         
         price_data = PriceData(symbol, resolution, df)
         
         return price_data
 
     @staticmethod
-    def validate_date(target: datetime.datetime) -> bool:
+    def validate_date(target: Union[datetime.datetime, datetime.date]) -> bool:
         """ 
         Validates if specified date is a valid datetime type
         """ 
@@ -184,7 +194,7 @@ class MTDataLoader:
         return datetime.datetime(year=target.year, month=target.month, day=target.day)
 
     @staticmethod 
-    def __rates_to_frame(rates: Any) -> pd.DataFrame:
+    def rates_to_frame(rates: Any) -> pd.DataFrame:
         """ 
         Converts raw rates into dataframe with OHLC columns.
         """

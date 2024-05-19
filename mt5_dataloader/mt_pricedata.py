@@ -6,7 +6,7 @@ is converted into this object.
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from mt_utils import MTResolutions
+from .mt_utils import MTResolutions
 
 
 class PriceData:
