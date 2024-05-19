@@ -2,3 +2,5 @@
 *.pyc
 *.png
 .idea/
+notebooks/examples/
+.pytest_cache/
