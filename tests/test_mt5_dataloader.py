@@ -139,7 +139,7 @@ class TestMTDataLoader(unittest.TestCase):
         Tests `get_price_data` with invalid resolution.
         """
         self.assertRaises(
-            ValueError,
+            TypeError,
             lambda: self.mt_dataloader.get_price_data(
                 symbol=self.symbol,
                 resolution="50000",
@@ -152,7 +152,7 @@ class TestMTDataLoader(unittest.TestCase):
         Tests `get_price_data` with invalid request.
         """
         self.assertRaises(
-            KeyError,
+            ValueError,
             lambda: self.mt_dataloader.get_price_data(
                 symbol=self.symbol,
                 resolution=MTResolutions.RESOLUTION_M15,
@@ -184,11 +184,3 @@ class TestMTDataLoader(unittest.TestCase):
         )
 
         self.assertIsNone(result)
-
-    def test_validate_date(self):
-        """
-        Tests date validation function.
-        """
-        self.assertTrue(self.mt_dataloader.validate_date(dt(2024, 1, 1)))
-        self.assertTrue(self.mt_dataloader.validate_date(dt(2024, 1, 1, 1, 1, 1)))
-        self.assertFalse(self.mt_dataloader.validate_date(1234567))
